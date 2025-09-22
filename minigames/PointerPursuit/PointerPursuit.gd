@@ -11,6 +11,7 @@ const BASE_RECT_SIZE := Vector2(90, 64)
 @onready var status_label: Label = $UI/TopBar/HBoxContainer/StatusLabel
 @onready var instructions_label: Label = $UI/Instructions
 @onready var result_label: Label = $UI/ResultLabel
+@onready var music_player: AudioStreamPlayer = $MusicPlayer
 
 var is_game_active := false
 var has_finished := false
@@ -27,16 +28,17 @@ var scale_step := 0.1
 var capture_radius := 40.0
 
 func _ready():
-	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-	apply_difficulty_settings()
-	setup_chaser_visual()
-	status_label.text = "Estado: Prepárate"
-	time_label.text = "Tiempo: %.1f" % TOTAL_TIME
-	instructions_label.visible = true
-	result_label.visible = false
-	await get_tree().create_timer(2.0).timeout
-	chaser_body.visible = true
-	start_minigame()
+        Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+        apply_difficulty_settings()
+        setup_chaser_visual()
+        status_label.text = "Estado: Prepárate"
+        time_label.text = "Tiempo: %.1f" % TOTAL_TIME
+        instructions_label.visible = true
+        result_label.visible = false
+        music_player.play()
+        await get_tree().create_timer(2.0).timeout
+        chaser_body.visible = true
+        start_minigame()
 
 func apply_difficulty_settings():
 	match GameManager.get_difficulty():
@@ -143,12 +145,14 @@ func end_minigame(won: bool, message: String):
 	else:
 		status_label.text = "Estado: Fin del juego"
 
-	result_label.visible = true
-	result_label.text = message + "\nPuntuación: " + str(final_score)
-	chaser_body.visible = false
+        result_label.visible = true
+        result_label.text = message + "\nPuntuación: " + str(final_score)
+        chaser_body.visible = false
+        if music_player.playing:
+                music_player.stop()
 
-	await get_tree().create_timer(2.0).timeout
-	GameManager.complete_minigame(won, final_score)
+        await get_tree().create_timer(2.0).timeout
+        GameManager.complete_minigame(won, final_score)
 
 func calculate_final_score(time_survived: float) -> int:
 	if time_survived < 1.0:
